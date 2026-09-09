@@ -1,0 +1,17 @@
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+const pixel=fs.readFileSync('pixel-art.js','utf8');
+const render=fs.readFileSync('harbor-renderer.js','utf8');
+const css=fs.readFileSync('map.css','utf8');
+assert.match(pixel,/LOGICAL_SIZE=128/,'sprite logical detail should be 128px');
+assert.match(pixel,/ship\('container'\)/,'container ship texture required');
+assert.match(pixel,/gantryCrane\(\)/,'gantry crane texture required');
+assert.match(pixel,/truck\(0\)/,'terminal trucks required');
+assert.match(render,/devicePixelRatio/,'renderer should honor HiDPI output');
+assert.match(render,/offsets=count===4\?\[-84,-28,28,84\]/,'gantry cranes must be distributed along the berth');
+assert.match(render,/updateTerminalActivity/,'terminal cargo choreography required');
+assert.match(render,/ship\.type==='tanker'/,'cargo visuals should branch by ship type');
+assert.match(render,/Starboard ten\./,'displayed turning call should match clockwise turn geometry');
+assert.match(render,/Tugs push easy from the seaward side/,'displayed berthing call should match tug geometry');
+assert.match(css,/image-rendering:auto/,'HiDPI canvas must not force nearest-neighbor scaling on text');
+console.log('Visual contract tests passed.');
