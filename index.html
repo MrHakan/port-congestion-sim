@@ -4,23 +4,36 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#06131d" />
-  <meta name="description" content="Pixel-art port congestion and operations research simulator." />
+  <meta name="description" content="64x64 raster pixel-art port congestion and operations research simulator." />
   <title>Port Congestion Simulator</title>
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="map.css" />
 </head>
 <body>
 <div class="app-shell">
   <header class="topbar">
-    <div class="brand"><div class="port-mark">⚓</div><div><h1>Port Congestion Simulator</h1><p>Discrete-event terminal operations · Pixel-art harbor · Operational Research sandbox</p></div></div>
+    <div class="brand"><div class="port-mark">⚓</div><div><h1>Port Congestion Simulator</h1><p>Discrete-event terminal operations · 64×64 raster pixel-art harbor · Operational Research sandbox</p></div></div>
     <div class="clock-card"><span>PORT TIME</span><b id="clock">DAY 01 · 00:00</b></div>
     <div class="top-actions"><button id="saveBtn">Save</button><button id="loadBtn">Load</button><button id="resetBtn">New Scenario</button></div>
   </header>
 
   <main class="layout">
     <section class="harbor-panel panel">
-      <div class="panel-head harbor-head"><div><span class="eyebrow">LIVE HARBOR</span><h2>Approach, Pilotage & Berthing</h2></div><div class="sim-controls"><button class="speed active" data-speed="1">1×</button><button class="speed" data-speed="5">5×</button><button class="speed" data-speed="20">20×</button><button class="speed" data-speed="60">60×</button><button id="pauseBtn" class="pause">❚❚ Pause</button></div></div>
-      <div id="harbor" class="harbor"><div class="water-label pilot-label">PILOT STATION</div><div class="water-label basin-label">TURNING BASIN</div><div class="disclaimer">Training visualization only — not navigational guidance.</div></div>
+      <div class="panel-head harbor-head"><div><span class="eyebrow">LIVE HARBOR · TRUE PIXEL MODE</span><h2>Approach, Pilotage & Berthing</h2></div><div class="sim-controls"><button class="speed active" data-speed="1">1×</button><button class="speed" data-speed="5">5×</button><button class="speed" data-speed="20">20×</button><button class="speed" data-speed="60">60×</button><button id="pauseBtn" class="pause">❚❚ Pause</button></div></div>
+      <div id="harbor" class="harbor">
+        <div class="pixel-badge">64×64 RASTER SPRITES · NEAREST NEIGHBOR</div>
+        <div class="map-nav-hint"><b>MOVE</b> Drag / WASD / Arrow Keys <span>·</span> <b>ZOOM</b> Wheel / Pinch</div>
+        <div class="map-controls" aria-label="Harbor map controls">
+          <button id="zoomOutBtn" title="Zoom out">−</button>
+          <span id="mapZoom">68%</span>
+          <button id="zoomInBtn" title="Zoom in">+</button>
+          <button id="centerMapBtn" class="wide-map">Center Port</button>
+          <button id="followMapBtn" class="wide-map" disabled>Follow Vessel</button>
+        </div>
+        <div class="minimap-shell"><div class="mini-title"><span>PORT MAP</span><small>click to move</small></div><canvas id="minimap" width="240" height="135" aria-label="Port minimap"></canvas></div>
+        <div class="disclaimer">Training visualization only — not navigational guidance.</div>
+      </div>
       <div class="harbor-status"><div><span>WEATHER</span><b id="weatherText">Fair</b></div><div><span>WIND / VIS</span><b id="weatherDetail">8 kn / 10 nm</b></div><div><span>SCHEDULER</span><b id="policyBadge">HYBRID</b></div><div><span>VESSELS IN PORT SYSTEM</span><b id="shipsActive">0</b></div></div>
     </section>
 
@@ -37,7 +50,7 @@
     <section class="panel or-panel"><div class="panel-head"><div><span class="eyebrow">OPERATIONAL RESEARCH LAB</span><h2>Queueing & Scheduling</h2></div><button id="benchmarkBtn" class="primary">Run 48h Policy Benchmark</button></div><div class="or-grid"><div class="or-card"><span>ARRIVAL RATE λ</span><b id="lambda">0.00</b><small>ships/hour</small></div><div class="or-card"><span>LITTLE'S LAW Lq ≈ λWq</span><b id="littleL">0.00</b><small>expected ships waiting</small></div><div class="or-card"><span>WEIGHTED OBJECTIVE</span><b id="objective">0</b><small>lower is better</small></div><div class="or-card formula"><span>HYBRID DISPATCH SCORE</span><code>1.25·Wait + 170·Priority − 0.08·Slack − 0.08·Service</code></div></div><div class="chart-wrap"><canvas id="queueChart"></canvas></div><div id="benchmarkResults" class="benchmark-results"><div class="empty">Run the benchmark to compare FCFS, SPT, Priority, EDD and Hybrid under the same seed.</div></div></section>
   </main>
 
-  <footer><span>Port Congestion Simulator · Browser-based discrete-event simulation</span><span>Built for education, experimentation and Operational Research.</span></footer>
+  <footer><span>Port Congestion Simulator · Browser-based discrete-event simulation</span><span>64×64 raster sprite pipeline · Education and Operational Research experimentation.</span></footer>
 </div>
 
 <div id="scenarioModal" class="modal hidden"><div class="modal-card"><div class="modal-head"><div><span class="eyebrow">SCENARIO DESIGN</span><h2>Configure the Port</h2></div><button data-close="scenarioModal">×</button></div><label>Random seed<input id="seedInput" value="PORT-OPS-01"></label><label>Mean vessel inter-arrival time <span><b id="arrivalValue">105</b> min</span><input id="arrivalInput" type="range" min="45" max="240" value="105" step="5"></label><div class="triple"><label>Pilots<input id="pilotInput" type="number" min="1" max="5" value="2"></label><label>Tugs<input id="tugInput" type="number" min="1" max="8" value="3"></label><label>Crane gangs<input id="craneInput" type="number" min="3" max="12" value="7"></label></div><label>Initial dispatch policy<select id="modalPolicy"><option value="fcfs">FCFS</option><option value="spt">SPT</option><option value="priority">Priority</option><option value="edd">EDD</option><option value="hybrid" selected>Hybrid OR</option></select></label><button id="createScenario" class="primary wide">START NEW SCENARIO</button></div></div>
@@ -46,8 +59,8 @@
 <script src="https://cdn.jsdelivr.net/npm/pixi.js@7.4.3/dist/pixi.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <script src="sim-engine.js"></script>
+<script src="pixel-art.js"></script>
 <script src="harbor-renderer.js"></script>
-<script src="harbor-effects.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
