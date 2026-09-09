@@ -24,6 +24,7 @@ jobs:
         run: |
           node --check sim-engine.js
           node --check harbor-renderer.js
+          node --check harbor-effects.js
           node --check app.js
           node --check tests/smoke.mjs
       - name: Check required web files
@@ -32,12 +33,15 @@ jobs:
           test -f styles.css
           test -f sim-engine.js
           test -f harbor-renderer.js
+          test -f harbor-effects.js
           test -f app.js
           grep -q 'id="harbor"' index.html
           grep -q 'pixi.js' index.html
           grep -q 'chart.js' index.html
           grep -q 'sim-engine.js' index.html
           grep -q 'harbor-renderer.js' index.html
+          grep -q 'harbor-effects.js' index.html
+          grep -q 'app.js' index.html
       - name: Run seven-day discrete-event simulation test
         run: node tests/smoke.mjs
 
