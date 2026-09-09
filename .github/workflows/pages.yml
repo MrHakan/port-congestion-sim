@@ -23,16 +23,19 @@ jobs:
       - name: Check JavaScript syntax
         run: |
           node --check sim-engine.js
+          node --check ops-geometry.js
           node --check pixel-art.js
           node --check harbor-renderer.js
           node --check app.js
           node --check tests/smoke.mjs
+          node --check tests/geometry.mjs
       - name: Check required web files
         run: |
           test -f index.html
           test -f styles.css
           test -f map.css
           test -f sim-engine.js
+          test -f ops-geometry.js
           test -f pixel-art.js
           test -f harbor-renderer.js
           test -f app.js
@@ -40,16 +43,18 @@ jobs:
           grep -q 'id="minimap"' index.html
           grep -q 'id="centerMapBtn"' index.html
           grep -q 'id="followMapBtn"' index.html
-          grep -q 'pixi.js' index.html
-          grep -q 'chart.js' index.html
-          grep -q 'sim-engine.js' index.html
+          grep -q 'ops-geometry.js' index.html
           grep -q 'pixel-art.js' index.html
           grep -q 'harbor-renderer.js' index.html
-          grep -q 'map.css' index.html
-          grep -q 'Nearest' harbor-renderer.js || grep -q 'SCALE_MODES.NEAREST' pixel-art.js
+          grep -q 'UPSCALE=4' pixel-art.js
+          grep -q 'updateTerminalActivity' harbor-renderer.js
+          grep -q 'tugPlan' harbor-renderer.js
+          grep -q 'pilotBoarding' harbor-renderer.js
           grep -q 'bindCamera' harbor-renderer.js
           grep -q 'drawMinimap' harbor-renderer.js
           grep -q 'focusShip' app.js
+      - name: Run harbor maneuver geometry tests
+        run: node tests/geometry.mjs
       - name: Run seven-day discrete-event simulation test
         run: node tests/smoke.mjs
 

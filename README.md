@@ -1,6 +1,6 @@
 # Port Congestion Simulator
 
-A browser-based port operations simulator that combines discrete-event simulation, Operational Research and a true low-resolution pixel-art harbor.
+A browser-based port operations simulator that combines discrete-event simulation, Operational Research and a high-resolution raster pixel-art harbor.
 
 **Live:** https://mrhakan.github.io/port-congestion-sim/
 
@@ -13,7 +13,10 @@ A browser-based port operations simulator that combines discrete-event simulatio
 - pilot-boat transit and pilot boarding
 - pilot ladder climbing animation
 - inbound pilotage, tug rendezvous, turning-basin maneuver and final berthing
+- quay-side tug geometry: final berthing tugs work from the seaward/opposite-quay side, while unberthing tugs pull outward
 - mooring teams, heaving lines, towlines and all-fast sequence
+- animated container gantry crane cycles with trolley/spreader motion
+- lightweight container-truck loops between the terminal yard and active container berths
 - cargo operations with weather-adjusted productivity
 - outbound pilotage and resource release
 - changing visibility, wind and weather delays
@@ -21,15 +24,21 @@ A browser-based port operations simulator that combines discrete-event simulatio
 
 The shiphandling animation is an educational visualization, not a certified maneuvering, navigation or berth-planning model.
 
-## True pixel-art renderer
+## High-resolution pixel-art renderer
 
-The harbor renderer no longer scales vector drawings and calls them pixel art. Ships, tugs, pilot boats, dock workers, cranes, buildings and port scenery are generated as fixed low-resolution raster textures, primarily on 64x64 canvases, then rendered through PixiJS with nearest-neighbor sampling and pixel snapping.
+The artwork uses a logical 64x64 pixel grid but is generated on 256x256 backing canvases (4x resolution) and rendered with nearest-neighbor sampling. This keeps the chunky pixel-art style while making labels and sprites noticeably cleaner on high-DPI tablets and desktop displays.
 
-The map itself uses tiled raster water, land and quay textures and a fixed 2048x1152 world coordinate system.
+Ships, tugs, pilot boats, dock workers, cranes, terminal trucks, containers, buildings and port scenery share cached textures. The terminal uses fixed crane/truck pools and completed vessel views are destroyed instead of accumulating indefinitely.
+
+## Harbor animation model
+
+Pilot boarding is tied to the vessel's starboard-side boarding geometry: the pilot boat settles alongside, the ladder runs between the launch and ship side, and the pilot disappears into the vessel after boarding rather than floating outside the bridge.
+
+Tug placement is calculated from the ship heading and berth/quay side. During final parallel berthing, tugs remain on the seaward side of the vessel. During unmooring they increase their seaward offset to visually represent pulling the ship off the berth. Towlines attach to fore/aft points rather than the vessel center.
+
+Container terminals animate only while a container ship is in cargo operations. Active crane gangs cycle shared spreader/container sprites and two reusable terminal trucks per berth move containers to or from the yard. This is intentionally lightweight rather than a full container-yard simulation.
 
 ## Map navigation
-
-The harbor is now a movable world rather than a fixed viewport.
 
 - drag with mouse, pen or one finger to pan
 - WASD or arrow keys to pan on desktop
@@ -42,8 +51,6 @@ The harbor is now a movable world rather than a fixed viewport.
 - clicking the minimap moves the camera directly to that area
 
 ## Operational Research features
-
-The dispatch engine includes:
 
 - FCFS — First Come, First Served
 - SPT — Shortest Processing Time
@@ -64,7 +71,8 @@ The dispatch engine includes:
 
 - PixiJS for the pixel-art harbor and camera system
 - Chart.js for OR/KPI visualization
-- generated 64x64 raster sprite pipeline with nearest-neighbor scaling
+- generated 256x256 backing textures based on a 64x64 logical pixel grid
+- shared sprite pools for gantry cranes and container trucks
 - no external sprite CDN required
 - GitHub Pages deployment
 
@@ -72,13 +80,12 @@ The dispatch engine includes:
 
 The project is static and does not require a build step. Open `index.html` through a local HTTP server, or deploy it directly to GitHub Pages.
 
-The simulation core is intentionally independent from the renderer so it can be tested headlessly with Node.js.
-
 ```bash
+node tests/geometry.mjs
 node tests/smoke.mjs
 ```
 
-CI advances a congested port for seven simulated days and checks resource, berth and serialization invariants before Pages deployment. It also validates the raster asset pipeline and camera/minimap integration.
+CI verifies maneuver geometry (including opposite-quay tug placement), advances a congested port for seven simulated days, and checks resource, berth and serialization invariants before Pages deployment.
 
 ## Disclaimer
 
