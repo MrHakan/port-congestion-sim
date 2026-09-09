@@ -1,0 +1,61 @@
+name: Deploy Port Congestion Simulator
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Check JavaScript syntax
+        run: |
+          node --check sim-engine.js
+          node --check harbor-renderer.js
+          node --check app.js
+          node --check tests/smoke.mjs
+      - name: Check required web files
+        run: |
+          test -f index.html
+          test -f styles.css
+          test -f sim-engine.js
+          test -f harbor-renderer.js
+          test -f app.js
+          grep -q 'id="harbor"' index.html
+          grep -q 'pixi.js' index.html
+          grep -q 'chart.js' index.html
+          grep -q 'sim-engine.js' index.html
+          grep -q 'harbor-renderer.js' index.html
+      - name: Run seven-day discrete-event simulation test
+        run: node tests/smoke.mjs
+
+  deploy:
+    needs: validate
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
