@@ -1,6 +1,6 @@
 # Port Congestion Simulator
 
-A browser-based, pixel-art port operations simulator that combines animated ship handling with discrete-event simulation and Operational Research.
+A browser-based port operations simulator that combines discrete-event simulation, Operational Research and a true low-resolution pixel-art harbor.
 
 **Live:** https://mrhakan.github.io/port-congestion-sim/
 
@@ -11,14 +11,35 @@ A browser-based, pixel-art port operations simulator that combines animated ship
 - berth compatibility by vessel type, LOA and draft
 - constrained pilots, tugs and crane gangs
 - pilot-boat transit and pilot boarding
+- pilot ladder climbing animation
 - inbound pilotage, tug rendezvous, turning-basin maneuver and final berthing
-- mooring teams and all-fast sequence
+- mooring teams, heaving lines, towlines and all-fast sequence
 - cargo operations with weather-adjusted productivity
 - outbound pilotage and resource release
 - changing visibility, wind and weather delays
 - terminal KPIs and queue history
 
 The shiphandling animation is an educational visualization, not a certified maneuvering, navigation or berth-planning model.
+
+## True pixel-art renderer
+
+The harbor renderer no longer scales vector drawings and calls them pixel art. Ships, tugs, pilot boats, dock workers, cranes, buildings and port scenery are generated as fixed low-resolution raster textures, primarily on 64x64 canvases, then rendered through PixiJS with nearest-neighbor sampling and pixel snapping.
+
+The map itself uses tiled raster water, land and quay textures and a fixed 2048x1152 world coordinate system.
+
+## Map navigation
+
+The harbor is now a movable world rather than a fixed viewport.
+
+- drag with mouse, pen or one finger to pan
+- WASD or arrow keys to pan on desktop
+- mouse wheel to zoom
+- two-finger pinch to zoom on touch devices
+- `Center Port` resets the camera
+- click a vessel, berth card, radio message or queue row to focus that vessel
+- `Follow Vessel` keeps the camera locked to the selected moving ship
+- interactive minimap shows traffic, selected vessel and current viewport
+- clicking the minimap moves the camera directly to that area
 
 ## Operational Research features
 
@@ -41,9 +62,10 @@ The dispatch engine includes:
 
 ## Visual stack
 
-- PixiJS for the animated pixel-art harbor
+- PixiJS for the pixel-art harbor and camera system
 - Chart.js for OR/KPI visualization
-- procedural ships, tugs, pilot boat, cranes and dock workers — no sprite CDN required
+- generated 64x64 raster sprite pipeline with nearest-neighbor scaling
+- no external sprite CDN required
 - GitHub Pages deployment
 
 ## Development
@@ -56,7 +78,7 @@ The simulation core is intentionally independent from the renderer so it can be 
 node tests/smoke.mjs
 ```
 
-The CI test advances a congested port for seven simulated days and checks resource, berth and serialization invariants before Pages deployment.
+CI advances a congested port for seven simulated days and checks resource, berth and serialization invariants before Pages deployment. It also validates the raster asset pipeline and camera/minimap integration.
 
 ## Disclaimer
 
