@@ -3,131 +3,50 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <meta name="theme-color" content="#091a22" />
-  <meta name="description" content="Animated port congestion and berth allocation simulator using Operational Research techniques." />
+  <meta name="theme-color" content="#06131d" />
+  <meta name="description" content="Pixel-art port congestion and operations research simulator." />
   <title>Port Congestion Simulator</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 <div class="app-shell">
   <header class="topbar">
-    <div class="brand">
-      <div class="brand-mark">⚓</div>
-      <div><h1>Port Congestion Simulator</h1><p>Operational Research meets animated port operations.</p></div>
-    </div>
-    <div class="clock-block"><span>PORT TIME</span><b id="portClock">MON 06:00</b></div>
-    <div class="top-actions">
-      <button class="soft" id="pauseBtn">Pause</button>
-      <button class="speed active" data-speed="1">1×</button>
-      <button class="speed" data-speed="4">4×</button>
-      <button class="speed" data-speed="12">12×</button>
-      <button class="speed" data-speed="48">48×</button>
-      <button class="primary" id="resetBtn">New Scenario</button>
-    </div>
+    <div class="brand"><div class="port-mark">⚓</div><div><h1>Port Congestion Simulator</h1><p>Discrete-event terminal operations · Pixel-art harbor · Operational Research sandbox</p></div></div>
+    <div class="clock-card"><span>PORT TIME</span><b id="clock">DAY 01 · 00:00</b></div>
+    <div class="top-actions"><button id="saveBtn">Save</button><button id="loadBtn">Load</button><button id="resetBtn">New Scenario</button></div>
   </header>
 
   <main class="layout">
-    <section class="scene-panel panel">
-      <div class="scene-toolbar">
-        <div><span class="eyebrow">LIVE HARBOR</span><b id="weatherText">Good visibility · SW 8 kn</b></div>
-        <div class="resource-pills">
-          <span>👨‍✈️ Pilots <b id="pilotCount">2/2</b></span>
-          <span>🚤 Tugs <b id="tugCount">3/3</b></span>
-          <span>🏗 Cranes <b id="craneCount">6/6</b></span>
-        </div>
-      </div>
-      <div class="canvas-wrap">
-        <canvas id="harbor" width="1600" height="900" aria-label="Animated pixel-art port simulation"></canvas>
-        <div id="radioBubbleLayer" class="bubble-layer"></div>
-        <div class="scene-legend">
-          <span><i class="dot queue"></i> Anchorage queue</span>
-          <span><i class="dot inbound"></i> Inbound / pilotage</span>
-          <span><i class="dot cargo"></i> Alongside</span>
-          <span><i class="dot outbound"></i> Outbound</span>
-        </div>
-      </div>
+    <section class="harbor-panel panel">
+      <div class="panel-head harbor-head"><div><span class="eyebrow">LIVE HARBOR</span><h2>Approach, Pilotage & Berthing</h2></div><div class="sim-controls"><button class="speed active" data-speed="1">1×</button><button class="speed" data-speed="5">5×</button><button class="speed" data-speed="20">20×</button><button class="speed" data-speed="60">60×</button><button id="pauseBtn" class="pause">❚❚ Pause</button></div></div>
+      <div id="harbor" class="harbor"><div class="water-label pilot-label">PILOT STATION</div><div class="water-label basin-label">TURNING BASIN</div><div class="disclaimer">Training visualization only — not navigational guidance.</div></div>
+      <div class="harbor-status"><div><span>WEATHER</span><b id="weatherText">Fair</b></div><div><span>WIND / VIS</span><b id="weatherDetail">8 kn / 10 nm</b></div><div><span>SCHEDULER</span><b id="policyBadge">HYBRID</b></div><div><span>VESSELS IN PORT SYSTEM</span><b id="shipsActive">0</b></div></div>
     </section>
 
     <aside class="right-stack">
-      <section class="panel control-panel">
-        <div class="panel-head"><div><span class="eyebrow">PORT CONTROL</span><h2>Dispatch Policy</h2></div><span class="live-chip">LIVE</span></div>
-        <label class="field">Berth allocation rule
-          <select id="policySelect">
-            <option value="fcfs">FCFS · First Come, First Served</option>
-            <option value="spt">SPT · Shortest Processing Time</option>
-            <option value="priority">Priority / Earliest Departure</option>
-            <option value="wcost" selected>Weighted Cost Minimization</option>
-          </select>
-        </label>
-        <div class="policy-explain" id="policyExplain"></div>
-        <div class="slider-grid">
-          <label>Waiting-cost weight <b id="waitWeightLabel">45%</b><input id="waitWeight" type="range" min="0" max="100" value="45"></label>
-          <label>Turnaround weight <b id="turnWeightLabel">35%</b><input id="turnWeight" type="range" min="0" max="100" value="35"></label>
-          <label>Priority weight <b id="priorityWeightLabel">20%</b><input id="priorityWeight" type="range" min="0" max="100" value="20"></label>
-        </div>
-        <div class="scenario-actions"><button class="soft" id="addShipBtn">+ Inject Vessel</button><button class="soft" id="weatherBtn">Change Weather</button></div>
-      </section>
+      <section class="panel kpi-panel"><div class="panel-head"><div><span class="eyebrow">PORT PERFORMANCE</span><h2>Operations KPIs</h2></div><span id="objectiveBadge" class="score">OR 0</span></div><div class="kpis"><div><span>QUEUE</span><b id="kQueue">0</b><small>ships</small></div><div><span>AVG WAIT</span><b id="kWait">0.0</b><small>hours</small></div><div><span>TURNAROUND</span><b id="kTurn">0.0</b><small>hours</small></div><div><span>THROUGHPUT</span><b id="kThrough">0.0</b><small>ships/day</small></div></div><div class="util-row"><label>Berths <i><span id="uBerth"></span></i><b id="uBerthText">0%</b></label><label>Pilots <i><span id="uPilot"></span></i><b id="uPilotText">0%</b></label><label>Tugs <i><span id="uTug"></span></i><b id="uTugText">0%</b></label><label>Cranes <i><span id="uCrane"></span></i><b id="uCraneText">0%</b></label></div></section>
 
-      <section class="panel kpi-panel">
-        <div class="panel-head"><div><span class="eyebrow">OPERATIONS RESEARCH</span><h2>Live KPIs</h2></div></div>
-        <div class="kpis">
-          <div><span>Queue</span><b id="kpiQueue">0</b><small>vessels</small></div>
-          <div><span>Avg Wait</span><b id="kpiWait">0.0</b><small>hours</small></div>
-          <div><span>Berth Util.</span><b id="kpiUtil">0%</b><small>rolling</small></div>
-          <div><span>Throughput</span><b id="kpiThroughput">0.0</b><small>ships/day</small></div>
-          <div><span>Demurrage</span><b id="kpiDemurrage">$0</b><small>estimated</small></div>
-          <div><span>Little's L</span><b id="kpiLittle">0.0</b><small>system WIP</small></div>
-        </div>
-        <div class="mini-chart"><div class="chart-head"><span>Queue history</span><b id="queuePeak">Peak 0</b></div><canvas id="queueChart" width="600" height="120"></canvas></div>
-      </section>
+      <section class="panel berth-panel"><div class="panel-head"><div><span class="eyebrow">TERMINAL</span><h2>Berth Board</h2></div></div><div id="berthBoard" class="berth-board"></div></section>
+
+      <section class="panel radio-panel"><div class="panel-head"><div><span class="eyebrow">VHF / PORT OPS</span><h2>Radio Traffic</h2></div><button id="clearRadio" class="tiny">Clear view</button></div><div id="radioLog" class="radio-log"></div></section>
     </aside>
 
-    <section class="panel queue-panel">
-      <div class="panel-head"><div><span class="eyebrow">ANCHORAGE</span><h2>Vessel Queue</h2></div><span id="queueRuleTag" class="rule-tag">Weighted Cost</span></div>
-      <div class="table-scroll"><table><thead><tr><th>#</th><th>Vessel</th><th>Type</th><th>LOA / Draft</th><th>Cargo</th><th>ETA</th><th>Waiting</th><th>Priority</th><th>Status</th></tr></thead><tbody id="queueBody"></tbody></table></div>
-    </section>
+    <section class="panel queue-panel"><div class="panel-head"><div><span class="eyebrow">ANCHORAGE & ETA LIST</span><h2>Vessel Queue</h2></div><div class="queue-tools"><label>Dispatch policy<select id="policySelect"><option value="fcfs">FCFS — First Come First Served</option><option value="spt">SPT — Shortest Processing Time</option><option value="priority">Priority Class</option><option value="edd">EDD — Earliest Due Date</option><option value="hybrid" selected>Hybrid OR Score</option></select></label></div></div><div class="table-wrap"><table><thead><tr><th>SEQ</th><th>VESSEL</th><th>TYPE</th><th>LOA</th><th>DRAFT</th><th>STATUS</th><th>WAIT</th><th>BERTH</th><th>OR SCORE</th></tr></thead><tbody id="queueBody"></tbody></table></div></section>
 
-    <section class="panel berth-panel">
-      <div class="panel-head"><div><span class="eyebrow">TERMINAL</span><h2>Berth Plan</h2></div><span class="rule-tag">Feasibility + Resource Constraints</span></div>
-      <div id="berthCards" class="berth-cards"></div>
-    </section>
-
-    <section class="panel radio-panel">
-      <div class="panel-head"><div><span class="eyebrow">VHF / OPERATIONS LOG</span><h2>Radio Traffic</h2></div><button class="soft compact" id="clearRadioBtn">Clear view</button></div>
-      <div id="radioLog" class="radio-log"></div>
-    </section>
-
-    <section class="panel or-panel">
-      <div class="panel-head"><div><span class="eyebrow">DECISION SUPPORT</span><h2>Why this berth?</h2></div></div>
-      <div id="decisionPanel" class="decision-panel"><p>The optimizer will explain its next berth assignment here.</p></div>
-      <details class="model-notes"><summary>Operational Research model</summary><div>
-        <p><b>Decision:</b> assign one feasible waiting vessel to each free berth when pilot, tug and weather constraints allow.</p>
-        <p><b>Feasibility:</b> LOA ≤ berth length, draft ≤ berth depth − safety UKC margin, and cargo type compatible with terminal.</p>
-        <p><b>Objective:</b> policy-dependent score combining waiting time, estimated service duration, vessel priority and delay cost.</p>
-        <p><b>Service time:</b> maneuvering + mooring + cargo quantity ÷ effective crane rate, adjusted by vessel/berth match and weather.</p>
-        <p><b>Resources:</b> pilots and tugs are seized during pilotage/berthing and released after all fast; cranes are allocated while alongside.</p>
-      </div></details>
-      <p class="disclaimer">Educational simulation only — not for navigation, berth planning or real-world shiphandling decisions.</p>
-    </section>
+    <section class="panel or-panel"><div class="panel-head"><div><span class="eyebrow">OPERATIONAL RESEARCH LAB</span><h2>Queueing & Scheduling</h2></div><button id="benchmarkBtn" class="primary">Run 48h Policy Benchmark</button></div><div class="or-grid"><div class="or-card"><span>ARRIVAL RATE λ</span><b id="lambda">0.00</b><small>ships/hour</small></div><div class="or-card"><span>LITTLE'S LAW Lq ≈ λWq</span><b id="littleL">0.00</b><small>expected ships waiting</small></div><div class="or-card"><span>WEIGHTED OBJECTIVE</span><b id="objective">0</b><small>lower is better</small></div><div class="or-card formula"><span>HYBRID DISPATCH SCORE</span><code>1.25·Wait + 170·Priority − 0.08·Slack − 0.08·Service</code></div></div><div class="chart-wrap"><canvas id="queueChart"></canvas></div><div id="benchmarkResults" class="benchmark-results"><div class="empty">Run the benchmark to compare FCFS, SPT, Priority, EDD and Hybrid under the same seed.</div></div></section>
   </main>
+
+  <footer><span>Port Congestion Simulator · Browser-based discrete-event simulation</span><span>Built for education, experimentation and Operational Research.</span></footer>
 </div>
 
-<div class="modal hidden" id="scenarioModal">
-  <div class="modal-card">
-    <div class="modal-head"><div><span class="eyebrow">NEW PORT DAY</span><h2>Scenario Generator</h2></div><button class="close" data-close="scenarioModal">×</button></div>
-    <label>Seed<input id="seedInput" value="PORT-OPS-01"></label>
-    <label>Traffic intensity<select id="trafficIntensity"><option value="light">Light</option><option value="normal" selected>Normal</option><option value="heavy">Heavy</option><option value="congested">Congested</option></select></label>
-    <label>Weather pattern<select id="weatherPattern"><option value="fair" selected>Mostly fair</option><option value="variable">Variable</option><option value="rough">Rough / delay-prone</option></select></label>
-    <button id="createScenarioBtn" class="primary wide">Start simulation</button>
-  </div>
-</div>
+<div id="scenarioModal" class="modal hidden"><div class="modal-card"><div class="modal-head"><div><span class="eyebrow">SCENARIO DESIGN</span><h2>Configure the Port</h2></div><button data-close="scenarioModal">×</button></div><label>Random seed<input id="seedInput" value="PORT-OPS-01"></label><label>Mean vessel inter-arrival time <span><b id="arrivalValue">105</b> min</span><input id="arrivalInput" type="range" min="45" max="240" value="105" step="5"></label><div class="triple"><label>Pilots<input id="pilotInput" type="number" min="1" max="5" value="2"></label><label>Tugs<input id="tugInput" type="number" min="1" max="8" value="3"></label><label>Crane gangs<input id="craneInput" type="number" min="3" max="12" value="7"></label></div><label>Initial dispatch policy<select id="modalPolicy"><option value="fcfs">FCFS</option><option value="spt">SPT</option><option value="priority">Priority</option><option value="edd">EDD</option><option value="hybrid" selected>Hybrid OR</option></select></label><button id="createScenario" class="primary wide">START NEW SCENARIO</button></div></div>
+
 <div id="toast" class="toast"></div>
-
-<script src="sim-core.js"></script>
-<script src="renderer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pixi.js@7.4.3/dist/pixi.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="sim-engine.js"></script>
+<script src="harbor-renderer.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
